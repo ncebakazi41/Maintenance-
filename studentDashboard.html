@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tech Geeks Maintenance - Student Dashboard</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background:#FAF3E0; /* Soft beige main background */
+    color:#1F3A93; /* Navy text */
+    margin:0;
+}
+
+/* Sidebar */
+.sidebar {
+    width:220px;
+    height:100vh;
+    background:#1F3A93; /* Navy Blue */
+    position:fixed;
+    top:0;
+    left:0;
+    padding-top:20px;
+}
+
+.sidebar h2 {
+    text-align:center;
+    color:#F5F5F5; /* Light cream text */
+    margin-bottom:30px;
+}
+
+.sidebar button {
+    display:block;
+    width:80%;
+    margin:10px auto;
+    padding:10px;
+    text-align:center;
+    text-decoration:none;
+    color:#F5F5F5; /* Cream */
+    background:#1F3A93;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+    font-weight:bold;
+    transition:0.3s;
+}
+
+.sidebar button:hover {
+    background:#145A63; /* Darker teal hover */
+}
+
+/* Main content */
+.main {
+    margin-left:220px;
+    padding:20px;
+}
+
+header {
+    margin-bottom:20px;
+    color:#1F3A93;
+}
+
+.credentials {
+    background:#1F7A8C; /* Teal box for credentials */
+    padding:15px;
+    border-radius:8px;
+    margin-bottom:20px;
+    color:#F5F5F5;
+}
+
+input, select, textarea, button {
+    padding:10px;
+    border-radius:5px;
+    margin:6px 0;
+    border:1px solid #1F3A93;
+}
+
+input, select, textarea {
+    background:#F5F5F5;
+    color:#1F3A93;
+}
+
+button {
+    background:#1F7A8C;
+    color:#F5F5F5;
+    border:none;
+    cursor:pointer;
+    font-weight:bold;
+    transition:0.3s;
+}
+
+button:hover {
+    background:#145A63;
+}
+
+table {
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+}
+
+th, td {
+    border:1px solid #1F3A93;
+    padding:10px;
+}
+
+th {
+    background:#1F7A8C;
+    color:#F5F5F5;
+}
+
+td {
+    background:#EAEAEA;
+    color:#1F3A93;
+}
+</style>
+</head>
+
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <h2>Tech Geeks</h2>
+    <button onclick="logout()">Logout</button>
+</div>
+
+<div class="main">
+<header>
+    <h1>Student Dashboard</h1>
+</header>
+
+<div class="credentials">
+<strong>Name:</strong> <span id="stuName"></span> |
+<strong>Surname:</strong> <span id="stuSurname"></span> |
+<strong>Residence:</strong> <span id="stuResidence"></span> |
+<strong>Room:</strong> <span id="stuRoom"></span>
+</div>
+
+<h2>Submit Issue</h2>
+<form id="issueForm">
+<select id="title" required>
+<option value="">Select issue type</option>
+<option value="Wi-Fi">Wi-Fi</option>
+<option value="Maintenance">Maintenance</option>
+</select>
+
+<textarea id="desc" placeholder="Describe the issue" required></textarea>
+
+<button type="submit">Submit Issue</button>
+</form>
+
+<h2>Your Issues</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Title</th>
+<th>Description</th>
+<th>Status</th>
+<th>Staff Comment</th>
+</tr>
+</thead>
+<tbody id="tableBody"></tbody>
+</table>
+
+</div>
+
+<script>
+// CHECK LOGIN
+const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
+if (!currentUser || currentUser.role !== "student") {
+    alert("Please login first!");
+    window.location.href = "login.html";
+}
+
+// DISPLAY USER
+document.getElementById("stuName").innerText = currentUser.fullName;
+document.getElementById("stuSurname").innerText = currentUser.surname;
+document.getElementById("stuResidence").innerText = currentUser.residence;
+document.getElementById("stuRoom").innerText = currentUser.room;
+
+// SUBMIT ISSUE
+document.getElementById("issueForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    const title = document.getElementById("title").value;
+    const desc = document.getElementById("desc").value.trim();
+    if(!title || !desc){
+        alert("Please fill all fields");
+        return;
+    }
+    let issues = JSON.parse(localStorage.getItem("issues")) || [];
+    issues.push({
+        studentName: currentUser.fullName,
+        studentSurname: currentUser.surname,
+        residence: currentUser.residence,
+        room: currentUser.room,
+        title: title,
+        desc: desc,
+        status: "Pending",
+        comment: ""
+    });
+    localStorage.setItem("issues", JSON.stringify(issues));
+    document.getElementById("issueForm").reset();
+    loadIssues();
+    alert("Issue submitted!");
+});
+
+// LOAD ISSUES
+function loadIssues(){
+    let issues = JSON.parse(localStorage.getItem("issues")) || [];
+    const myIssues = issues.filter(i =>
+        i.studentName === currentUser.fullName &&
+        i.studentSurname === currentUser.surname
+    );
+    const table = document.getElementById("tableBody");
+    table.innerHTML = "";
+    myIssues.forEach((i,index)=>{
+        table.innerHTML += `
+        <tr>
+            <td>${index+1}</td>
+            <td>${i.title}</td>
+            <td>${i.desc}</td>
+            <td>${i.status}</td>
+            <td>${i.comment || ""}</td>
+        </tr>
+        `;
+    });
+}
+
+// LOGOUT
+function logout(){
+    localStorage.removeItem("currentUser");
+    window.location.href = "login.html";
+}
+
+// INITIAL LOAD
+loadIssues();
+</script>
+
+</body>
+</html>

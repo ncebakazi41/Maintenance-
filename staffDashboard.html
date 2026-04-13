@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tech Geeks Maintenance - Staff Dashboard</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background:#FAF3E0;
+    color:#1F3A93;
+    margin:0;
+}
+
+/* Sidebar */
+.sidebar {
+    width:220px;
+    height:100vh;
+    background:#1F3A93;
+    position:fixed;
+    top:0;
+    left:0;
+    padding-top:20px;
+}
+
+.sidebar h2 {
+    text-align:center;
+    color:#F5F5F5;
+    margin-bottom:30px;
+}
+
+.sidebar button {
+    display:block;
+    width:80%;
+    margin:10px auto;
+    padding:10px;
+    color:#F5F5F5;
+    background:#1F3A93;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+.sidebar button:hover {
+    background:#145A63;
+}
+
+/* Main */
+.main {
+    margin-left:220px;
+    padding:20px;
+}
+
+table {
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+}
+
+th, td {
+    border:1px solid #1F3A93;
+    padding:10px;
+}
+
+th {
+    background:#1F7A8C;
+    color:#F5F5F5;
+}
+
+td {
+    background:#EAEAEA;
+}
+
+button.update {
+    background:#1F7A8C;
+    color:#fff;
+    border:none;
+    cursor:pointer;
+    padding:5px 10px;
+}
+
+#chartContainer {
+    width:50%;
+    margin-top:30px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="sidebar">
+    <h2>Tech Geeks</h2>
+    <button onclick="logout()">Logout</button>
+</div>
+
+<div class="main">
+<h1>Staff Dashboard</h1>
+
+<h2>Student Issues</h2>
+<table id="staffTable">
+<thead>
+<tr>
+<th>#</th>
+<th>Name</th>
+<th>Surname</th>
+<th>Residence</th>
+<th>Room</th>
+<th>Problem</th>
+<th>Description</th>
+<th>Status</th>
+<th>Comment</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+
+<h2>Issue Status Analysis</h2>
+<div id="chartContainer">
+<canvas id="statusChart"></canvas>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// LOGIN CHECK
+const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+if(!currentUser || currentUser.role !== "staff"){
+    alert("Please login first!");
+    window.location.href = "login.html";
+}
+
+// LOAD DATA
+let issues = JSON.parse(localStorage.getItem("issues")) || [];
+
+// DEFAULT STATUS
+issues.forEach(i => {
+    if(!i.status) i.status = "RECEIVED";
+});
+
+// RENDER TABLE
+function renderTable() {
+    const tbody = document.querySelector("#staffTable tbody");
+    tbody.innerHTML = "";
+
+    issues.forEach((i, index) => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+        <td>${index+1}</td>
+        <td>${i.studentName || ""}</td>
+        <td>${i.studentSurname || ""}</td>
+        <td>${i.residence || ""}</td>
+        <td>${i.room || ""}</td>
+        <td>${i.title || ""}</td>
+        <td>${i.desc || ""}</td>
+        <td>
+            <select id="status-${index}">
+                <option value="RECEIVED" ${i.status==="RECEIVED"?"selected":""}>RECEIVED</option>
+                <option value="PENDING" ${i.status==="PENDING"?"selected":""}>PENDING</option>
+                <option value="DONE" ${i.status==="DONE"?"selected":""}>DONE</option>
+            </select>
+        </td>
+        <td>
+            <input type="text" id="comment-${index}" value="${i.comment || ""}">
+        </td>
+        <td>
+            <button class="update" onclick="updateIssue(${index})">Update</button>
+        </td>
+        `;
+
+        tbody.appendChild(row);
+    });
+
+    updateChart();
+}
+
+// UPDATE ISSUE
+function updateIssue(index) {
+    const status = document.getElementById(`status-${index}`).value;
+    const comment = document.getElementById(`comment-${index}`).value;
+
+    issues[index].status = status;
+    issues[index].comment = comment;
+
+    localStorage.setItem("issues", JSON.stringify(issues));
+
+    alert("Updated successfully");
+    renderTable();
+}
+
+// CHART
+let chart;
+
+function updateChart() {
+    const counts = { RECEIVED:0, PENDING:0, DONE:0 };
+
+    issues.forEach(i => {
+        if(counts[i.status] !== undefined){
+            counts[i.status]++;
+        }
+    });
+
+    const ctx = document.getElementById("statusChart");
+
+    if(chart) chart.destroy();
+
+    chart = new Chart(ctx, {
+        type: 'pie', // ✅ FIXED
+        data: {
+            labels: ["RECEIVED", "PENDING", "DONE"],
+            datasets: [{
+                data: [counts.RECEIVED, counts.PENDING, counts.DONE],
+                backgroundColor: ["#1F7A8C", "#FF8C42", "#4DA8DA"]
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: "bottom"
+                }
+            }
+        }
+    });
+}
+
+// LOGOUT
+function logout() {
+    localStorage.removeItem("currentUser");
+    window.location.href = "login.html";
+}
+
+// INIT
+renderTable();
+</script>
+
+</body>
+</html>

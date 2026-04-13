@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tech Geeks Maintenance - Login / Create Account</title>
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background:#FAF3E0; /* Soft beige */
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+    margin:0;
+}
+
+.container {
+    width:400px;
+    padding:30px;
+    background:#F5F5F5; /* Cream card background */
+    border-radius:10px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.2);
+}
+
+h2 {
+    text-align:center;
+    margin-bottom:20px;
+    color:#1F3A93; /* Navy */
+}
+
+input, select, button {
+    width:100%;
+    padding:10px;
+    margin:10px 0;
+    border-radius:5px;
+    border:1px solid #1F3A93;
+    font-size:16px;
+}
+
+input, select {
+    background:#FAF3E0; /* Beige input */
+    color:#1F3A93;
+}
+
+button {
+    background:#1F7A8C; /* Teal */
+    color:#F5F5F5; /* Cream text */
+    border:none;
+    cursor:pointer;
+    font-weight:bold;
+    transition:0.3s;
+}
+
+button:hover {
+    background:#145A63; /* Darker teal hover */
+}
+
+.toggle {
+    text-align:center;
+    margin-top:15px;
+    cursor:pointer;
+    color:#1F7A8C;
+    font-weight:bold;
+}
+
+.toggle:hover {
+    text-decoration:underline;
+}
+
+.hidden { display:none; }
+</style>
+</head>
+<img src="c:\Users\Admin\Downloads\Logo.jpeg" alt="Company Logo">
+<body>
+<div class="container">
+
+    <!-- Login Form -->
+    <div id="loginForm">
+        <h2>Login</h2>
+        <select id="loginRole">
+            <option value="student">Student</option>
+            <option value="staff">Staff</option>
+        </select>
+        <input type="email" id="loginEmail" placeholder="Email" required>
+        <input type="password" id="loginPassword" placeholder="Password" required>
+        <button onclick="login()">Login</button>
+        <div class="toggle" onclick="showCreate()">Create Account</div>
+    </div>
+
+    <!-- Create Account Form -->
+    <div id="createForm" class="hidden">
+        <h2>Create Account</h2>
+        <select id="createRole">
+            <option value="student">Student</option>
+            <option value="staff">Staff</option>
+        </select>
+
+        <!-- Student Fields -->
+        <div id="studentFields">
+            <input type="text" id="stuFullName" placeholder="Full Name" required>
+            <input type="text" id="stuSurname" placeholder="Surname" required>
+            <input type="text" id="stuNumber" placeholder="Student Number" required>
+            <input type="email" id="stuEmail" placeholder="Student Email" required>
+            <select id="stuResidence" required>
+                <option value="" disabled selected>Select Residence</option>
+                <option value="Tauna">Tauna</option>
+                <option value="Umnandi">Umnandi</option>
+                <option value="Hannetje">Hannetje</option>
+                <option value="Mossouw">Mossouw</option>
+                <option value="Mhodo">Mhodo</option>
+            </select>
+            <input type="text" id="stuRoom" placeholder="Room Number" required>
+        </div>
+
+        <!-- Staff Fields -->
+        <div id="staffFields" class="hidden">
+            <input type="text" id="staffFullName" placeholder="Full Name" required>
+            <input type="text" id="staffOccupation" placeholder="Occupation" required>
+            <input type="email" id="staffEmail" placeholder="Staff Email" required>
+            <input type="text" id="staffNumber" placeholder="Staff Number" required>
+            <input type="password" id="staffPassword" placeholder="Create Password" required>
+        </div>
+
+        <button onclick="createAccount()">Create Account</button>
+        <div class="toggle" onclick="showLogin()">Back to Login</div>
+    </div>
+
+</div>
+
+<script>
+// Toggle forms
+function showCreate() {
+    document.getElementById("loginForm").classList.add("hidden");
+    document.getElementById("createForm").classList.remove("hidden");
+}
+function showLogin() {
+    document.getElementById("createForm").classList.add("hidden");
+    document.getElementById("loginForm").classList.remove("hidden");
+}
+
+// Toggle student/staff fields
+document.getElementById("createRole").addEventListener("change", function(){
+    if(this.value==="student"){
+        document.getElementById("studentFields").classList.remove("hidden");
+        document.getElementById("staffFields").classList.add("hidden");
+    } else{
+        document.getElementById("studentFields").classList.add("hidden");
+        document.getElementById("staffFields").classList.remove("hidden");
+    }
+});
+
+// Create Account
+function createAccount(){
+    const role = document.getElementById("createRole").value;
+    let users = JSON.parse(localStorage.getItem("users")) || [];
+
+    if(role==="student"){
+        const fullName = document.getElementById("stuFullName").value.trim();
+        const surname = document.getElementById("stuSurname").value.trim();
+        const number = document.getElementById("stuNumber").value.trim();
+        const email = document.getElementById("stuEmail").value.trim();
+        const residence = document.getElementById("stuResidence").value;
+        const room = document.getElementById("stuRoom").value.trim();
+
+        if(!fullName || !surname || !number || !email || !residence || !room){
+            alert("Please fill all fields!");
+            return;
+        }
+
+        const password = `Spu@${number.slice(-4)}`;
+        users.push({role:"student", fullName, surname, number, email, residence, room, password});
+        alert(`Student account created! Your password is ${password}`);
+    } else {
+        const fullName = document.getElementById("staffFullName").value.trim();
+        const occupation = document.getElementById("staffOccupation").value.trim();
+        const email = document.getElementById("staffEmail").value.trim();
+        const staffNumber = document.getElementById("staffNumber").value.trim();
+        const password = document.getElementById("staffPassword").value.trim();
+
+        if(!fullName || !occupation || !email || !staffNumber || !password){
+            alert("Please fill all fields!");
+            return;
+        }
+        users.push({role:"staff", fullName, occupation, email, staffNumber, password});
+        alert("Staff account created successfully!");
+    }
+
+    localStorage.setItem("users", JSON.stringify(users));
+    showLogin();
+}
+
+// Login
+function login(){
+    const role = document.getElementById("loginRole").value;
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value.trim();
+
+    const users = JSON.parse(localStorage.getItem("users")) || [];
+    const user = users.find(u=>u.role===role && u.email===email);
+
+    if(!user){ alert("Email not found!"); return; }
+
+    if(role==="student"){
+        if(password!==`Spu@${user.number.slice(-4)}`){ alert("Incorrect password!"); return; }
+        localStorage.setItem("currentUser", JSON.stringify(user));
+        window.location.href="studentDashboard.html";
+    } else {
+        if(password!==user.password){ alert("Incorrect password!"); return; }
+        localStorage.setItem("currentUser", JSON.stringify(user));
+        window.location.href="staffDashboard.html";
+    }
+}
+</script>
+</body>
+</html>
